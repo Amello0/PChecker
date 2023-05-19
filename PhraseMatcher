@@ -1,0 +1,99 @@
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Scanner;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class PhraseMatcher {
+
+    public static void main(String[] args) {
+        String[] fileNames = {"test1.txt", "test2.txt", "test3.txt", "test4.txt", "test5.txt"};
+        int threshold = 3;
+
+        Map<String, Map<String, Integer>> wordFrequencyMaps = new HashMap<>();
+        Map<String, Double> matchPercentages = new HashMap<>();
+
+        for (String fileName : fileNames) {
+            Map<String, Integer> wordFrequency = calculateWordFrequency(fileName);
+            wordFrequencyMaps.put(fileName, wordFrequency);
+        }
+
+        for (int i = 0; i < fileNames.length - 1; i++) {
+            String file1 = fileNames[i];
+            Map<String, Integer> frequencyMap1 = wordFrequencyMaps.get(file1);
+
+            for (int j = i + 1; j < fileNames.length; j++) {
+                String file2 = fileNames[j];
+                Map<String, Integer> frequencyMap2 = wordFrequencyMaps.get(file2);
+
+                double matchPercentage = calculatePhraseMatchPercentage(frequencyMap1, frequencyMap2, threshold);
+                matchPercentages.put(file1 + "-" + file2, matchPercentage);
+            }
+        }
+
+       
+        System.out.println("Overall Results Visualization:");
+        for (String fileName : fileNames) {
+            System.out.print("\t\t" + fileName);
+        }
+        System.out.println();
+
+        for (String fileName1 : fileNames) {
+            System.out.print(fileName1 + "\t");
+            for (String fileName2 : fileNames) {
+                if (fileName1.equals(fileName2)) {
+                    System.out.print("    -     \t");
+                } else {
+                    String key = fileName1 + "-" + fileName2;
+                    double matchPercentage = matchPercentages.getOrDefault(key, 0.0);
+                    System.out.printf("%.2f%%\t\t", matchPercentage);
+                }
+            }
+            System.out.println();
+        }
+    }
+
+    private static Map<String, Integer> calculateWordFrequency(String fileName) {
+        Map<String, Integer> wordFrequency = new HashMap<String, Integer>();
+        try {
+            File file = new File("/home/ayoosaya/h-drive/testScripts/test1.txt");
+            System.out.println();
+            Scanner scanner = new Scanner(file);
+            while (scanner.hasNext()) {
+                String word = scanner.next();
+                if (wordFrequency.containsKey(word)) {
+                    int count = wordFrequency.get(word);
+                    wordFrequency.put(word, count + 1);
+                } else {
+                    wordFrequency.put(word, 1);
+                }
+            }
+            scanner.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        return wordFrequency;
+       
+    }
+
+    private static double calculatePhraseMatchPercentage(Map<String, Integer> frequencyMap1, Map<String, Integer> frequencyMap2, int threshold) {
+        int numMatches = 0;
+        int totalPhrases = 0;
+
+        for (Map.Entry<String, Integer> entry : frequencyMap1.entrySet()) {
+            String word = entry.getKey();
+            int frequency1 = entry.getValue();
+            int frequency2 = frequencyMap2.getOrDefault(word, 0);
+            int phraseMatchCount = Math.min(frequency1, frequency2);
+
+            numMatches += phraseMatchCount;
+            totalPhrases += Math.max(frequency1, frequency2);
+        }
+
+        double matchPercentage = (double) numMatches / totalPhrases * 100.0;
+        return matchPercentage;
+   
+            }
+        }
